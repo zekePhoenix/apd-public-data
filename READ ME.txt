@@ -1,0 +1,3 @@
+This data can not be used to recreate an official APD/FBI UCR Crime Report.
+
+This data is counted by the number of incidents. UCR crime data is counted by the number of victims.
