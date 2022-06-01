@@ -72,6 +72,21 @@ CobraData_2021<- read_csv("COBRA-2021.csv",
                                            poss_date = col_date(format = "%m/%d/%Y"), 
                                            poss_time = col_time(format = "%H:%M")))
 
+# *1d. Download 2022 fresh data ------------------------------------------------
+
+site = "https://www.atlantapd.org/i-want-to/crime-data-downloads"
+session <- session(site)
+Cobra_download2022 <- session %>% session_follow_link("COBRA-2022")
+download_html(Cobra_download2022$url, "COBRA_2022.zip")
+#Unzip and read data
+unzip("COBRA_2022.zip")
+CobraData_2022<- read_csv("COBRA-2022.csv", 
+                          col_types = cols(rpt_date = col_date(format = "%m/%d/%Y"), 
+                                           occur_date = col_date(format = "%m/%d/%Y"), 
+                                           occur_time = col_time(format = "%H:%M"), 
+                                           poss_date = col_date(format = "%m/%d/%Y"), 
+                                           poss_time = col_time(format = "%H:%M")))
+
 
 # 2. Wrangle All COBRA data and bind ----
 
@@ -112,7 +127,14 @@ df_2021 <- CobraData_2021 %>%
                    UCR_Number = NA)
 
 
-df_all <- rbind(df_historical, df_2020_icis, df_2020_m43,df_2021)
+# COBRA 2022
+
+df_2022 <- CobraData_2022%>% 
+        dplyr::select(-zone,-occur_day_num, -occur_day) %>% 
+        add_column(apartment_office_prefix = NA, apartment_number = NA, watch = NA, location_type = NA,
+                   UCR_Number = NA)
+
+df_all <- rbind(df_historical, df_2020_icis, df_2020_m43,df_2021, df_2022)
 
 #join uc codes
 
@@ -136,5 +158,5 @@ df_all$UC_literal <- factor(df_all$UC_literal,levels = uc_levels)
 df_all <- df_all %>% 
         mutate(occur_time = as.character(occur_time)) %>% 
         mutate(poss_time = as.character(poss_time))
-
+saveRDS(df_all,"apd_all_crime.RDS")
 write_csv(df_all, "apd_public_crime_data.csv", col_names = TRUE)
